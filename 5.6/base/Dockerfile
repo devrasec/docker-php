@@ -1,14 +1,22 @@
 FROM phusion/baseimage:0.9.17
 MAINTAINER Luis Contreras <luiscon26@gmail.com>
 
-# persistent / runtime deps
-RUN apt-get update \
-    && apt-get install -y ca-certificates curl librecode0 libsqlite3-0 \
-    libxml2 --no-install-recommends && rm -r /var/lib/apt/lists/*
-
-# phpize deps
-RUN apt-get update && apt-get install -y autoconf file g++ gcc libc-dev \
-    make pkg-config re2c --no-install-recommends && rm -r /var/lib/apt/lists/*
+# persistent / runtime deps and phpize deps
+RUN apt-get update && apt-get install -y \
+        autoconf \
+        ca-certificates \
+        curl \
+        file \
+        g++ \
+        gcc \
+        libc-dev \
+        librecode0 \
+        libsqlite3-0 \
+        libxml2 \
+        make \
+        pkg-config \
+        re2c \
+        --no-install-recommends && rm -r /var/lib/apt/lists/*
 
 ENV PHP_INI_DIR /usr/local/etc/php
 RUN mkdir -p $PHP_INI_DIR/conf.d
@@ -50,19 +58,26 @@ RUN buildDeps=" \
         --with-config-file-scan-dir="$PHP_INI_DIR/conf.d" \
         $PHP_EXTRA_CONFIGURE_ARGS \
         --disable-cgi \
+        --enable-mbstring \
         --enable-mysqlnd \
+        --enable-shmop \
+        --enable-soap \
+        --enable-sockets \
+        --enable-zip \
         --with-curl \
+        --with-mysqli \
         --with-openssl \
+        --with-pdo-mysql \
         --with-readline \
         --with-recode \
         --with-zlib \
-        --with-pdo-mysql \
-        --with-mysqli \
     && make -j"$(nproc)" \
     && make install \
     && { find /usr/local/bin /usr/local/sbin -type f -executable -exec strip --strip-all '{}' + || true; } \
     && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false -o APT::AutoRemove::SuggestsImportant=false $buildDeps \
-    && make clean
+    && make clean \
+    && mkdir -p /etc/service/php-fpm \
+    && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 COPY docker-php-ext-* /usr/local/bin/
 
@@ -70,10 +85,6 @@ WORKDIR /var/www/html
 COPY php-fpm.conf /usr/local/etc/
 
 EXPOSE 9000
-RUN mkdir -p /etc/service/php-fpm
-ADD init_fpm /etc/service/php-fpm/run
+COPY init_fpm /etc/service/php-fpm/run
 
 CMD ["/sbin/my_init"]
-
-# Clean up APT when done.
-RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
