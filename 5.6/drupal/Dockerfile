@@ -1,4 +1,4 @@
-FROM luistmac/php:base
+FROM luistmac/php:5.6-base
 MAINTAINER Luis Contreras <luiscon26@gmail.com>
 
 # Install common modules
