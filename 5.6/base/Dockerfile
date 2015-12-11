@@ -1,12 +1,16 @@
 FROM phusion/baseimage:0.9.17
 MAINTAINER Luis Contreras <luiscon26@gmail.com>
 
+# Remove Curl to install a newer version.
+RUN apt-get purge -y --auto-remove curl \
+    && add-apt-repository -y ppa:costamagnagianfranco/ettercap-stable-backports
+RUN apt-get update && apt-get install -y curl --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
+
 # persistent / runtime deps and phpize deps
 RUN apt-get update && apt-get install -y \
         autoconf \
         ca-certificates \
-        curl \
-        file \
         g++ \
         gcc \
         libc-dev \
@@ -16,7 +20,7 @@ RUN apt-get update && apt-get install -y \
         make \
         pkg-config \
         re2c \
-        --no-install-recommends && rm -r /var/lib/apt/lists/*
+        --no-install-recommends && rm -rf /var/lib/apt/lists/*
 
 ENV PHP_INI_DIR /usr/local/etc/php
 RUN mkdir -p $PHP_INI_DIR/conf.d
