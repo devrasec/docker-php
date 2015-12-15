@@ -80,7 +80,8 @@ RUN buildDeps=" \
     && { find /usr/local/bin /usr/local/sbin -type f -executable -exec strip --strip-all '{}' + || true; } \
     && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false -o APT::AutoRemove::SuggestsImportant=false $buildDeps \
     && make clean \
-    && mkdir -p /etc/service/php-fpm \
+    && cp sapi/fpm/init.d.php-fpm /etc/init.d/php-fpm \
+    && chmod 775 /etc/init.d/php-fpm \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 COPY docker-php-ext-* /usr/local/bin/
